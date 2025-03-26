@@ -29,6 +29,10 @@ K8S_VERSION=$(az aks get-versions -l ${LOCATION} \
 --query "reverse(sort_by(values[?isDefault==true].{version: version}, &version)) | [1] " \
 -o tsv)
 
+# One-time Fix: I needed to set this before using the --ssh-access flag
+az feature register --namespace "Microsoft.ContainerService" --name "DisableSSHPreview"
+az feature show --namespace "Microsoft.ContainerService" --name "DisableSSHPreview"
+
 az aks create \
 --resource-group ${RG_NAME} \
 --name ${AKS_NAME} \
