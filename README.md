@@ -204,4 +204,52 @@ az aks mesh enable-ingress-gateway  \
   --name $AKS_NAME \
   --ingress-gateway-type external
 
+kubectl get pods -n aks-istio-ingress
+
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: pets-gateway
+  namespace: pets
+spec:
+  selector:
+    istio: aks-istio-ingressgateway-external
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+EOF
+
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: pets-route
+  namespace: pets
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - pets-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: store-front
+        port:
+          number: 80
+EOF
+
+
+
+# Testing - tweaked the app.yaml file with a ClusterIP service instead of LoadBalancer service for the store-front
+
+kubectl apply -f app.yaml -n pets
+
 ```
